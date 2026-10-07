@@ -20,7 +20,8 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import org.slf4j.Logger;
 
 /**
- * Tells a VoidRP server which mods this client runs, for its anticheat.
+ * Tells a VoidRP server which mods this client runs, for its anticheat, and draws the
+ * password of a server's login window as stars ({@link PasswordMask}).
  *
  * <p>Made for our 26.2 servers, which run plugins (Paper) while players come in on a
  * NeoForge client. The payload is optional, so the client still joins any server; it is
@@ -43,12 +44,16 @@ public final class ClientInfoMod {
     public ClientInfoMod(IEventBus modBus) {
         modBus.addListener(this::registerPayloads);
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(new PasswordMask());
     }
 
     private void registerPayloads(RegisterPayloadHandlersEvent event) {
         // Server-bound only; the handler never runs on a client.
         event.registrar("1").optional()
-                .playToServer(ClientInfoPayload.TYPE, ClientInfoPayload.STREAM_CODEC, (payload, context) -> { });
+                .playToServer(ClientInfoPayload.TYPE, ClientInfoPayload.STREAM_CODEC, (payload, context) -> { })
+                // Announces the password stars to the server while the login window is up
+                // (configuration phase, see MaskPayload); never sent.
+                .configurationToClient(MaskPayload.TYPE, MaskPayload.STREAM_CODEC, (payload, context) -> { });
     }
 
     @SubscribeEvent

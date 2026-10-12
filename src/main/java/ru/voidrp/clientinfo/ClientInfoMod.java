@@ -21,7 +21,8 @@ import org.slf4j.Logger;
 
 /**
  * Tells a VoidRP server which mods this client runs, for its anticheat, and draws the
- * password of a server's login window as stars ({@link PasswordMask}).
+ * password of a server's login window as stars ({@link PasswordMask}), and gives VoidRP UI
+ * pages the system cursor ({@link UiPointer}).
  *
  * <p>Made for our 26.2 servers, which run plugins (Paper) while players come in on a
  * NeoForge client. The payload is optional, so the client still joins any server; it is
@@ -45,6 +46,7 @@ public final class ClientInfoMod {
         modBus.addListener(this::registerPayloads);
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(new PasswordMask());
+        NeoForge.EVENT_BUS.register(new UiPointer());
     }
 
     private void registerPayloads(RegisterPayloadHandlersEvent event) {
@@ -53,7 +55,10 @@ public final class ClientInfoMod {
                 .playToServer(ClientInfoPayload.TYPE, ClientInfoPayload.STREAM_CODEC, (payload, context) -> { })
                 // Announces the password stars to the server while the login window is up
                 // (configuration phase, see MaskPayload); never sent.
-                .configurationToClient(MaskPayload.TYPE, MaskPayload.STREAM_CODEC, (payload, context) -> { });
+                .configurationToClient(MaskPayload.TYPE, MaskPayload.STREAM_CODEC, (payload, context) -> { })
+                // The system cursor for VoidRP UI pages (UiPointer).
+                .playToClient(UiScreenPayload.TYPE, UiScreenPayload.STREAM_CODEC, UiPointer::onScreen)
+                .playToServer(UiInputPayload.TYPE, UiInputPayload.STREAM_CODEC, (payload, context) -> { });
     }
 
     @SubscribeEvent
